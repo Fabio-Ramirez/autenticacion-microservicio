@@ -1,0 +1,8 @@
+# Ignorar archivos de compilación
+*.o
+*.class
+*.exe
+
+# Ignorar archivos de dependencias y directorios generados
+/node_modules
+/build
