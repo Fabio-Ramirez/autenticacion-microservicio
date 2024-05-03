@@ -2,8 +2,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 
-const users = []; // Aquí simulamos una base de datos de usuarios
-
 export const registerUser = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -21,7 +19,6 @@ export const registerUser = async (req, res) => {
             password: passwordHash,
             username
         });
-        console.log("ingresa api", passwordHash)
         await newUsuario.save();
 
         // Enviar una respuesta al cliente
@@ -40,19 +37,20 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-    const { username, password } = req.body;
-
-    const user = users.find((user) => user.username === username);
-    if (!user) {
-        return res.status(401).json({ message: 'Credenciales inválidas' });
-    }
-
     try {
+        const { username, password } = req.body;
+
+
+        const user = await User.findOne({ username })
+        if (!user) {
+            return res.status(401).json({ message: 'Usuario inválido' });
+        }
         if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ username }, 'secreto', { expiresIn: '1h' });
+            
             res.status(200).json({ token });
         } else {
-            res.status(401).json({ message: 'Credenciales inválidas' });
+            res.status(401).json({ message: 'Password inválido' });
         }
     } catch (error) {
         res.status(500).json({ message: 'Error al iniciar sesión' });
@@ -61,9 +59,10 @@ export const loginUser = async (req, res) => {
 
 export const getUserProfile = (req, res) => {
     const { username } = req.user;
-    console.log("token: ", token)
+
     const userProfile = { username };
-    res.status(200).json({ message: 'Usuario: ' + userProfile.username+' recuperado con éxito' });
+
+    res.status(200).json({ message: 'Usuario: ' + userProfile.username + ' recuperado con éxito' });
 };
 
 function generateJWTToken(user) {
